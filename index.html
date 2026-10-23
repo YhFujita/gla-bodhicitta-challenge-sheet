@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>菩提心チャレンジシート（第2版） - GLAシートアプリ</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- 操作ツールバー（印刷時は非表示） -->
+  <header class="app-toolbar no-print">
+    <div class="toolbar-brand">
+      <span class="sheet-badge">GLA</span>
+      <span class="app-title">菩提心チャレンジシート アプリ</span>
+      <span class="version-tag">第2版 再現</span>
+    </div>
+
+    <div class="toolbar-actions">
+      <!-- ズーム操作 -->
+      <div class="toolbar-group zoom-group">
+        <label for="zoomSlider">表示倍率: <span id="zoomVal">100%</span></label>
+        <button id="zoomOutBtn" class="btn btn-sm" title="縮小">−</button>
+        <input type="range" id="zoomSlider" min="50" max="150" value="100" step="5">
+        <button id="zoomInBtn" class="btn btn-sm" title="拡大">＋</button>
+        <button id="zoomFitBtn" class="btn btn-sm" title="画面に合わせる">全体表示</button>
+      </div>
+
+      <!-- 背景デザインの濃さ調整 -->
+      <div class="toolbar-group opacity-group">
+        <label for="bgOpacitySlider">図の濃さ: <span id="bgOpacityVal">80%</span></label>
+        <input type="range" id="bgOpacitySlider" min="10" max="100" value="80" step="5">
+      </div>
+
+      <!-- データ操作ボタン -->
+      <div class="toolbar-group action-buttons">
+        <button id="sampleBtn" class="btn btn-outline" title="使い方のサンプルを入力します">
+          💡 記入例
+        </button>
+        <button id="saveLocalBtn" class="btn btn-primary" title="ブラウザに保存します">
+          💾 保存
+        </button>
+        <button id="exportJsonBtn" class="btn btn-outline" title="ファイル(JSON)として保存">
+          📥 ファイル保存
+        </button>
+        <label class="btn btn-outline file-input-label" title="保存したファイルを読み込み">
+          📤 開く
+          <input type="file" id="importJsonInput" accept=".json" style="display:none;">
+        </label>
+        <button id="printBtn" class="btn btn-accent" title="A4横サイズで印刷・PDF保存します">
+          🖨️ 印刷 / PDF
+        </button>
+        <button id="clearBtn" class="btn btn-danger" title="すべての枠の内容を消去します">
+          🗑️ クリア
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- 自動保存メッセージトースト -->
+  <div id="saveToast" class="save-toast no-print">自動保存されました</div>
+
+  <!-- メインワークスペース（用紙コンテナ） -->
+  <main class="sheet-container-wrapper">
+    <div id="sheetScaleWrapper" class="sheet-scale-wrapper">
+      <article class="sheet-paper" id="challengeSheet">
+        <!-- シートヘッダー -->
+        <header class="sheet-header">
+          <div class="header-left">
+            <h1 class="sheet-main-title">菩提心チャレンジシート<span>（第2版）</span></h1>
+          </div>
+          <div class="header-right">
+            <div class="meta-row top-meta">
+              <div class="meta-item">
+                <span class="meta-label">会員番号：</span>
+                <input type="text" id="memberId" class="meta-input" placeholder="0000000" autocomplete="off">
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">ターミナル：</span>
+                <input type="text" id="terminal" class="meta-input" placeholder="ターミナル名" autocomplete="off">
+              </div>
+            </div>
+            <div class="meta-row name-box">
+              <div class="name-label-cell">氏名</div>
+              <div class="name-input-cell">
+                <input type="text" id="userName" class="name-input" placeholder="お名前をご記入ください" autocomplete="off">
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- メイングリッドエリア -->
+        <div class="sheet-body-grid">
+          <!-- 左カラム: 生まれた現実 & 菩提心 -->
+          <div class="column-left">
+            <!-- 枠1: 生まれた現実 -->
+            <section class="box-panel box-born-reality">
+              <div class="panel-header">
+                <h2 class="panel-title">生まれた現実</h2>
+              </div>
+              <div class="panel-body">
+                <textarea id="bornReality" class="sheet-textarea" placeholder="ここに生まれた現実をご記入ください..."></textarea>
+              </div>
+            </section>
+
+            <!-- 枠2: （　　）の心の菩提心 -->
+            <section class="box-panel box-bodhicitta">
+              <div class="panel-header bodhicitta-header">
+                <div class="bodhicitta-title-row">
+                  <span class="brace">（</span>
+                  <input type="text" id="mindName" class="mind-name-input" placeholder="心の名称" title="心の名前">
+                  <span class="brace">）</span>
+                  <span class="bodhicitta-title-text">の心の菩提心</span>
+                </div>
+                <div class="bodhicitta-subtitle">いかなる力を現したいですか？</div>
+              </div>
+              <div class="panel-body">
+                <textarea id="bodhicittaText" class="sheet-textarea" placeholder="現したい力、目指す心の境地をご記入ください..."></textarea>
+              </div>
+            </section>
+          </div>
+
+          <!-- 中央カラム: 受発色 座標軸 & アクション・エクササイズ -->
+          <div class="column-center">
+            <!-- 上部: 受発色エリア（上段: いつもの受発色 / 下段: 新たな受発色） -->
+            <section class="box-panel box-coordinates" id="coordinatePanel">
+              <!-- SVG背景図（人の横顔輪郭線【右向き・塗りなし】、4つの矢印、中心縦破線、透かし文字） -->
+              <div class="svg-diagram-layer" id="diagramLayer">
+                <svg viewBox="0 0 600 420" preserveAspectRatio="none" class="coordinate-svg">
+                  <defs>
+                    <filter id="subtleShadow" x="-10%" y="-10%" width="120%" height="120%">
+                      <feDropShadow dx="0" dy="1.5" stdDeviation="1.5" flood-opacity="0.12"/>
+                    </filter>
+                  </defs>
+
+                  <!-- 1. 人の横顔輪郭線（右向き・塗りつぶしなし・薄いグレー） -->
+                  <!-- 額・鼻・口・顎が右向き、後頭部が左向き -->
+                  <path class="silhouette-path"
+                    d="M 315 52
+                       C 362 52, 386 80, 390 110
+                       C 392 120, 395 125, 399 133
+                       L 420 157
+                       L 397 162
+                       C 400 170, 402 178, 396 182
+                       C 402 188, 400 196, 397 200
+                       C 400 208, 397 216, 394 220
+                       C 390 226, 384 230, 380 240
+                       C 376 252, 384 272, 392 312
+                       L 400 350
+                       L 220 350
+                       C 225 305, 238 250, 255 210
+                       C 235 180, 228 145, 238 100
+                       C 250 65, 275 52, 315 52 Z"
+                    fill="none"
+                    stroke="#c4c9d2"
+                    stroke-width="1.8"
+                    stroke-linejoin="round"
+                    stroke-linecap="round"
+                  />
+
+                  <!-- 2. 中央縦破線（いつもの受発色・新たな受発色の中心軸） -->
+                  <line x1="298" y1="30" x2="298" y2="415"
+                    stroke="#484e58"
+                    stroke-width="1.8"
+                    stroke-dasharray="5 4"
+                    class="vertical-axis"
+                  />
+
+                  <!-- 3. 透かし文字（受・色・発） -->
+                  <!-- 上段中央「受」 -->
+                  <g class="watermark-text watermark-ju-top">
+                    <circle cx="298" cy="150" r="13" fill="#ffffff" stroke="#c0c6cf" stroke-width="1.2" opacity="0.85"/>
+                    <text x="298" y="155" text-anchor="middle" font-family="'Noto Serif JP', serif" font-size="15" fill="#7a8594" font-weight="700">受</text>
+                  </g>
+
+                  <!-- 下段中央「受」 -->
+                  <g class="watermark-text watermark-ju-bottom">
+                    <circle cx="298" cy="275" r="13" fill="#ffffff" stroke="#c0c6cf" stroke-width="1.2" opacity="0.85"/>
+                    <text x="298" y="280" text-anchor="middle" font-family="'Noto Serif JP', serif" font-size="15" fill="#7a8594" font-weight="700">受</text>
+                  </g>
+
+                  <!-- 右上「色」 -->
+                  <text x="430" y="150" text-anchor="middle" class="watermark-large watermark-shiki" font-family="'Noto Serif JP', serif" font-size="34" fill="#afbeb5" opacity="0.5" font-weight="700">色</text>
+
+                  <!-- 右下「色」 -->
+                  <text x="430" y="325" text-anchor="middle" class="watermark-large watermark-shiki" font-family="'Noto Serif JP', serif" font-size="34" fill="#afbeb5" opacity="0.5" font-weight="700">色</text>
+
+                  <!-- 左下「発」 -->
+                  <text x="175" y="325" text-anchor="middle" class="watermark-large watermark-hatsu" font-family="'Noto Serif JP', serif" font-size="34" fill="#b0b8c6" opacity="0.5" font-weight="700">発</text>
+
+                  <!-- 4. 完全再現された4つの矢印 -->
+                  <!-- ① 左端の横矢印（生まれた現実 ⇐ 受発色：中央から生まれた現実へ向かう ⇐） -->
+                  <polygon points="0,210 28,192 28,201 50,201 50,219 28,219 28,228"
+                    fill="#9ca6b2"
+                    stroke="#5a6370"
+                    stroke-width="1.2"
+                    filter="url(#subtleShadow)"
+                  />
+
+                  <!-- ② 右端の横矢印（受発色 ⇐ 出会ったカオス：カオスから中央へ入る ⇐） -->
+                  <polygon points="550,210 578,192 578,201 600,201 600,219 578,219 578,228"
+                    fill="#9ca6b2"
+                    stroke="#5a6370"
+                    stroke-width="1.2"
+                    filter="url(#subtleShadow)"
+                  />
+
+                  <!-- ③ 発信の縦矢印（いつもの受発色（発信） ⇩ 新たな受発色（発信）） -->
+                  <polygon points="150,228 134,204 142,204 142,184 158,184 158,204 166,204"
+                    fill="#9ca6b2"
+                    stroke="#5a6370"
+                    stroke-width="1.2"
+                    filter="url(#subtleShadow)"
+                  />
+
+                  <!-- ④ 受信の縦矢印（いつもの受発色（受信） ⇩ 新たな受発色（受信）） -->
+                  <polygon points="450,228 434,204 442,204 442,184 458,184 458,204 466,204"
+                    fill="#9ca6b2"
+                    stroke="#5a6370"
+                    stroke-width="1.2"
+                    filter="url(#subtleShadow)"
+                  />
+                </svg>
+              </div>
+
+              <!-- 上段・下段の入力レイヤー -->
+              <div class="coordinates-content-overlay">
+                <!-- 【上段】 いつもの受発色 エリア -->
+                <div class="coord-half-section section-habitual">
+                  <!-- 上部タイトル: いつもの受発色 -->
+                  <div class="axis-title-box">
+                    <h2 class="axis-title-text">いつもの受発色</h2>
+                  </div>
+                  <!-- 入力グリッド: 左(発信) / 右(受信) -->
+                  <div class="coord-dual-inputs">
+                    <div class="dual-input-cell habitual-left">
+                      <textarea id="habitualTransmission" class="coord-textarea" placeholder="【いつもの発信】言葉・態度・反応の癖..."></textarea>
+                    </div>
+                    <div class="dual-input-cell habitual-right">
+                      <textarea id="habitualReception" class="coord-textarea" placeholder="【いつもの受信】受け止め方・解釈・固定観念..."></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 【下段】 新たな受発色 エリア（上段と同じ位置配列） -->
+                <div class="coord-half-section section-new">
+                  <!-- 上部タイトル: 新たな受発色 -->
+                  <div class="axis-title-box">
+                    <h2 class="axis-title-text">新たな受発色</h2>
+                  </div>
+                  <!-- 入力グリッド: 左(発信) / 右(受信) -->
+                  <div class="coord-dual-inputs">
+                    <div class="dual-input-cell new-left">
+                      <textarea id="newTransmission" class="coord-textarea" placeholder="【新たな発信】愛・智慧・調和に基づく言動..."></textarea>
+                    </div>
+                    <div class="dual-input-cell new-right">
+                      <textarea id="newReception" class="coord-textarea" placeholder="【新たな受信】相手の願いや真意の受け止め..."></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 枠の最下部に完全に再現された (発信) と (受信) のラベル -->
+                <div class="coord-bottom-labels-row">
+                  <div class="bottom-label-cell label-transmission">（発信）</div>
+                  <div class="bottom-label-cell label-reception">（受信）</div>
+                </div>
+              </div>
+            </section>
+
+            <!-- 下部: アクション & エクササイズ -->
+            <div class="center-bottom-row">
+              <!-- アクション枠 -->
+              <section class="box-panel box-action">
+                <div class="panel-header">
+                  <h2 class="panel-title">アクション</h2>
+                </div>
+                <div class="panel-body">
+                  <textarea id="actionText" class="sheet-textarea" placeholder="具体的に実行する行動・実践ステップをご記入ください..."></textarea>
+                </div>
+              </section>
+
+              <!-- エクササイズ枠 -->
+              <section class="box-panel box-exercise">
+                <div class="panel-header">
+                  <h2 class="panel-title">エクササイズ</h2>
+                </div>
+                <div class="panel-body">
+                  <textarea id="exerciseText" class="sheet-textarea" placeholder="心を整える習慣・日常のエクササイズ・留意点をご記入ください..."></textarea>
+                </div>
+              </section>
+
+              <!-- 枠中央下の「発」の丸文字（実シート再現） -->
+              <div class="sub-watermark-hatsu">
+                <div class="circle-hatsu">発</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 右カラム: 出会ったカオス（事態） -->
+          <div class="column-right">
+            <section class="box-panel box-chaos">
+              <div class="panel-header">
+                <h2 class="panel-title">出会ったカオス（事態）</h2>
+              </div>
+              <div class="panel-body">
+                <textarea id="metChaos" class="sheet-textarea" placeholder="直面している課題、問題、出来事、試練、カオス（事態の事実・状況）をご記入ください..."></textarea>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- シートフッター -->
+        <footer class="sheet-footer">
+          <div class="footer-copyright">
+            <span class="copyright-mark">© KEIKO TAKAHASHI</span>
+            <span class="project-mark">第33次グローバル・ジェネシスプロジェクト</span>
+          </div>
+        </footer>
+      </article>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

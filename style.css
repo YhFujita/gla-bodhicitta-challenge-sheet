@@ -1,0 +1,784 @@
+/* ==========================================================================
+   菩提心チャレンジシート（第2版） - GLAシートアプリ スタイルシート
+   ========================================================================== */
+
+:root {
+  --primary-color: #2b5c8f;
+  --primary-hover: #1e456f;
+  --accent-color: #2e7d32;
+  --danger-color: #c62828;
+  --dark-text: #1a1a1a;
+  --line-color: #222222;
+  --sub-text: #555555;
+  --paper-bg: #ffffff;
+  --app-bg: #e9ecef;
+  --input-bg: rgba(255, 255, 255, 0.85);
+  --input-focus-bg: #ffffff;
+  --border-radius: 4px;
+  --font-gothic: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Meiryo', 'Yu Gothic', sans-serif;
+  --font-serif: 'Noto Serif JP', 'Yu Mincho', 'Hiragino Mincho ProN', 'MS PMincho', serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-gothic);
+  background-color: var(--app-bg);
+  color: var(--dark-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+  overflow-y: scroll;
+}
+
+/* --------------------------------------------------------------------------
+   操作ツールバー
+   -------------------------------------------------------------------------- */
+.app-toolbar {
+  background: #1f2937;
+  color: #f9fafb;
+  padding: 10px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.toolbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sheet-badge {
+  background: #3b82f6;
+  color: #fff;
+  font-weight: 700;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.app-title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.version-tag {
+  font-size: 12px;
+  color: #9ca3af;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #e5e7eb;
+}
+
+.toolbar-group label {
+  white-space: nowrap;
+  font-size: 12px;
+  color: #d1d5db;
+}
+
+.toolbar-group input[type="range"] {
+  width: 90px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+/* ボタン群 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.btn-sm {
+  padding: 3px 8px;
+  font-size: 12px;
+  background: #374151;
+  color: #fff;
+  border: 1px solid #4b5563;
+}
+
+.btn-sm:hover {
+  background: #4b5563;
+}
+
+.btn-primary {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: #1d4ed8;
+}
+
+.btn-accent {
+  background: #059669;
+  color: #ffffff;
+}
+
+.btn-accent:hover {
+  background: #047857;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+.btn-danger:hover {
+  background: #b91c1c;
+}
+
+.btn-outline {
+  background: transparent;
+  color: #f3f4f6;
+  border-color: #4b5563;
+}
+
+.btn-outline:hover {
+  background: #374151;
+  border-color: #9ca3af;
+}
+
+.file-input-label {
+  margin: 0;
+}
+
+/* トースト通知 */
+.save-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 13px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.save-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --------------------------------------------------------------------------
+   シートコンテナ（A4横 比率の用紙）
+   -------------------------------------------------------------------------- */
+.sheet-container-wrapper {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-width: 1060px;
+}
+
+.sheet-scale-wrapper {
+  transform-origin: top center;
+  transition: transform 0.15s ease-out;
+}
+
+/* 用紙本体（横1040px × 縦735px、A4横比率約 1.414:1） */
+.sheet-paper {
+  width: 1040px;
+  height: 735px;
+  background-color: var(--paper-bg);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.08);
+  padding: 20px 24px 16px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* --------------------------------------------------------------------------
+   シートヘッダー
+   -------------------------------------------------------------------------- */
+.sheet-header {
+  height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 8px;
+  padding-bottom: 2px;
+}
+
+.sheet-main-title {
+  font-family: var(--font-gothic);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--dark-text);
+  letter-spacing: 0.06em;
+  line-height: 1.1;
+}
+
+.sheet-main-title span {
+  font-size: 20px;
+  font-weight: 600;
+  margin-left: 2px;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.meta-row.top-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+}
+
+.meta-label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.meta-input {
+  border: none;
+  border-bottom: 1px solid #777;
+  padding: 1px 4px;
+  font-size: 13px;
+  width: 110px;
+  background: transparent;
+  color: #111;
+  outline: none;
+  font-family: var(--font-gothic);
+}
+
+.meta-input:focus {
+  border-bottom: 1.5px solid var(--primary-color);
+  background: rgba(235, 245, 255, 0.5);
+}
+
+/* 氏名枠（罫線ボックス） */
+.meta-row.name-box {
+  display: flex;
+  border: 1.2px solid var(--line-color);
+  width: 250px;
+  height: 25px;
+  background: #fff;
+}
+
+.name-label-cell {
+  width: 48px;
+  border-right: 1.2px solid var(--line-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 500;
+  background: #fdfdfd;
+}
+
+.name-input-cell {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.name-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  padding: 0 8px;
+  font-size: 13px;
+  outline: none;
+  background: transparent;
+  font-family: var(--font-gothic);
+}
+
+.name-input:focus {
+  background: rgba(235, 245, 255, 0.5);
+}
+
+/* --------------------------------------------------------------------------
+   メイングリッドエリア
+   -------------------------------------------------------------------------- */
+.sheet-body-grid {
+  flex: 1;
+  display: flex;
+  border: 1.8px solid var(--line-color);
+  background: #ffffff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 各カラム共通 */
+.column-left {
+  width: 20%;
+  display: flex;
+  flex-direction: column;
+  border-right: 1.8px solid var(--line-color);
+}
+
+.column-center {
+  width: 60%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.column-right {
+  width: 20%;
+  border-left: 1.8px solid var(--line-color);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 共通パネル枠 */
+.box-panel {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  position: relative;
+}
+
+.panel-header {
+  padding: 5px 8px 3px 8px;
+}
+
+.panel-title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #111;
+}
+
+.panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 4px 8px 8px 8px;
+  position: relative;
+}
+
+/* 共通テキストエリア */
+.sheet-textarea {
+  width: 100%;
+  height: 100%;
+  border: none;
+  resize: none;
+  outline: none;
+  font-family: var(--font-gothic);
+  font-size: 13px;
+  line-height: 1.55;
+  color: #111;
+  background: transparent;
+  padding: 2px;
+}
+
+.sheet-textarea:focus {
+  background: rgba(240, 247, 255, 0.4);
+  border-radius: 2px;
+}
+
+.sheet-textarea::placeholder {
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* --------------------------------------------------------------------------
+   左カラムのスタイル
+   -------------------------------------------------------------------------- */
+.box-born-reality {
+  height: 65%;
+  border-bottom: 1.8px solid var(--line-color);
+}
+
+.box-bodhicitta {
+  height: 35%;
+}
+
+.bodhicitta-header {
+  padding: 5px 6px 2px 6px;
+}
+
+.bodhicitta-title-row {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.bodhicitta-title-row .brace {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mind-name-input {
+  width: 65px;
+  border: none;
+  border-bottom: 1px dashed #666;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  outline: none;
+  background: transparent;
+  color: #1a4473;
+  padding: 0 2px;
+}
+
+.mind-name-input:focus {
+  border-bottom: 1.5px solid var(--primary-color);
+  background: rgba(235, 245, 255, 0.6);
+}
+
+.bodhicitta-title-text {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.bodhicitta-subtitle {
+  font-size: 11px;
+  color: #333;
+  margin-top: 2px;
+  padding-left: 2px;
+  font-weight: 500;
+}
+
+/* --------------------------------------------------------------------------
+   中央カラム：受発色 エリア（上段：いつもの受発色 / 下段：新たな受発色）
+   -------------------------------------------------------------------------- */
+.box-coordinates {
+  height: 65%;
+  border-bottom: 1.8px solid var(--line-color);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* SVG背景図レイヤー */
+.svg-diagram-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.coordinate-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* コンテンツ入力レイヤー */
+.coordinates-content-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 上段（いつもの受発色）と下段（新たな受発色）の各セクション */
+.coord-half-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding: 4px 8px;
+}
+
+/* 上段と下段を分ける原本通りの枠線 */
+.section-habitual {
+  border-bottom: 1.8px solid var(--line-color);
+}
+
+/* 各段のタイトル枠（原本通りの配置・配列） */
+.axis-title-box {
+  text-align: center;
+  margin-bottom: 2px;
+  pointer-events: none;
+}
+
+.axis-title-text {
+  display: inline-block;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #111;
+  background: rgba(255, 255, 255, 0.75);
+  padding: 0 8px;
+  border-radius: 3px;
+}
+
+/* 2分割入力グリッド（左: 発信 / 右: 受信） */
+.coord-dual-inputs {
+  flex: 1;
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding: 0 2px 2px 2px;
+}
+
+.dual-input-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* 座標内テキストエリア */
+.coord-textarea {
+  flex: 1;
+  width: 100%;
+  border: none;
+  resize: none;
+  outline: none;
+  font-family: var(--font-gothic);
+  font-size: 12.5px;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 3px;
+  padding: 4px 8px;
+  border: 1px dashed transparent;
+  transition: all 0.2s ease;
+}
+
+.coord-textarea:focus {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.coord-textarea::placeholder {
+  color: #8892a0;
+  font-size: 11px;
+}
+
+/* 枠の下の方に完全に配置された (発信) と (受信) のラベル */
+.coord-bottom-labels-row {
+  height: 22px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  pointer-events: none;
+  margin-bottom: 2px;
+}
+
+.bottom-label-cell {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #222;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   中央下部：アクション & エクササイズ
+   -------------------------------------------------------------------------- */
+.center-bottom-row {
+  height: 35%;
+  display: flex;
+  position: relative;
+}
+
+.box-action {
+  width: 50%;
+  border-right: 1.8px solid var(--line-color);
+}
+
+.box-exercise {
+  width: 50%;
+}
+
+/* 中央境界線の「発」の丸文字 */
+.sub-watermark-hatsu {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.45;
+}
+
+.circle-hatsu {
+  width: 26px;
+  height: 26px;
+  border: 1.2px solid #8e99a8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-serif);
+  font-size: 14px;
+  font-weight: 700;
+  color: #7b8696;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+/* --------------------------------------------------------------------------
+   右カラム：出会ったカオス（事態）
+   -------------------------------------------------------------------------- */
+.box-chaos {
+  height: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   フッター部
+   -------------------------------------------------------------------------- */
+.sheet-footer {
+  height: 24px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.footer-copyright {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #333;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.copyright-mark {
+  font-family: var(--font-gothic);
+}
+
+/* --------------------------------------------------------------------------
+   印刷スタイル（A4横 1ページにピッタリ収まる設定）
+   -------------------------------------------------------------------------- */
+@page {
+  size: A4 landscape;
+  margin: 6mm 8mm;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .sheet-container-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    display: block !important;
+  }
+
+  .sheet-scale-wrapper {
+    transform: none !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .sheet-paper {
+    width: 100% !important;
+    max-width: 282mm !important;
+    height: 195mm !important;
+    max-height: 195mm !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .sheet-body-grid {
+    border-color: #000000 !important;
+  }
+
+  .box-born-reality,
+  .column-left,
+  .column-right,
+  .box-coordinates,
+  .section-habitual,
+  .box-action {
+    border-color: #000000 !important;
+  }
+
+  .sheet-textarea,
+  .coord-textarea,
+  .meta-input,
+  .mind-name-input,
+  .name-input {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* 印刷時はプレースホルダーを非表示 */
+  ::placeholder {
+    color: transparent !important;
+  }
+}
